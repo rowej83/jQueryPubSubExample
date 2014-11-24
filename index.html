@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Tiny Pub/Sub example</title>
+    <meta name="description" content="Tiny pub/sub example on how to pass $this item to handler">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+</head>
+<body>
+<p>Tiny/Pub sub example showing how to pass $(this) item back</p>
+
+<ul>
+    <li class="item" data-item-info="testing test here12">1</li>
+    <li class="item" data-item-info="testing test here123">2</li>
+    <li class="item" data-item-info="testing test here1234">3</li>
+    <li class="item" data-item-info="testing test here12345">4</li>
+    <li class="item confirm">5</li>
+    <li class="item confirm">6</li>
+    <li class="item confirm">7</li>
+    <li class="item">8</li>
+    <li class="item">9</li>
+    <li class="item">10</li>
+</ul>
+
+<!-- tries to load jQuery via cdn/ajax..if not then loads from local source -->
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="js/vendor/jquery-1.10.2.min.js"><\/script>')</script>
+
+<script>
+    /* jQuery Tiny Pub/Sub - v0.7 - 10/27/2011
+     * http://benalman.com/
+     * Copyright (c) 2011 "Cowboy" Ben Alman; Licensed MIT, GPL */
+
+    (function ($) {
+
+        var o = $({});
+
+        $.subscribe = function () {
+            o.on.apply(o, arguments);
+        };
+
+        $.unsubscribe = function () {
+            o.off.apply(o, arguments);
+        };
+
+        $.publish = function () {
+            o.trigger.apply(o, arguments);
+        };
+
+    }(jQuery));
+</script>
+
+<script>
+
+    //simple handler that shows the text within the li.item and the data-item-info text of the same element
+    function findTextInItem(e, findTextInItemValue) {
+        e.preventDefault();
+        alert($(findTextInItemValue).text());
+
+        // a ternary to see if a data-item-info attr on a li.item element is set, if not..then return string "empty"
+        message = ($(findTextInItemValue).data('item-info')) ? $(findTextInItemValue).data('item-info') : 'empty';
+        alert(message);
+    }
+
+    //simple handler that will remove the currently selected li.item
+    // from the list or will confirm if removal is desired if the li.item has a class of "confirm"
+    function removeItem(e, itemToRemove) {
+        e.preventDefault();
+        if ($(itemToRemove).hasClass('confirm')) {
+            if (confirm('are you sure you want to remove this?')) {
+                $(itemToRemove).hide();
+
+            }
+        } else {
+            $(itemToRemove).hide();
+        }
+    }
+
+    //subscribing the two handlers above to the actions /item/clicked and /item/remove
+    $.subscribe('/item/clicked', findTextInItem);
+    $.subscribe('/item/remove', removeItem);
+    //attaches when the dom is ready to be manipulated
+    $(document).ready(function () {
+
+//attaches a event listener for li.item dom elements
+        $('li.item').on('click', function (event) {
+
+//trigger the event and pass along $(this) within an array []
+// representing the "current" li.item  to the subscribed event handler (findTextInItem)
+
+            $.publish('/item/clicked', [$(this)]);
+            $.publish('/item/remove', [$(this)]);
+
+        });
+    });
+</script>
+
+</body>
+</html>
